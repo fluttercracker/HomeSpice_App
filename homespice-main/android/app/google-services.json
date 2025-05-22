@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "541223169130",
+    "project_id": "homespice-fd024",
+    "storage_bucket": "homespice-fd024.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:541223169130:android:f1302df83c8f8a93e72e13",
+        "android_client_info": {
+          "package_name": "com.example.homespice"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFQW3yIAibyRwJn1buKgRW1aMEfWIbfgE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
