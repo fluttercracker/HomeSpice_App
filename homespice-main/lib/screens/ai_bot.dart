@@ -17,7 +17,7 @@ class _AIBotState extends State<AIBot> {
   bool _isLoading = false;
 
   static const String apiKey =
-      '';
+      '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';
 
   Future<void> generateRecipe() async {
     final ingredients = _ingredientController.text.trim();
