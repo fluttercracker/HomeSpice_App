@@ -45,7 +45,7 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     Timer(const Duration(seconds: 4), () {
-      Navigator.of(context).pushReplacementNamed('/login'); // Change as needed
+      Navigator.of(context).pushReplacementNamed('/AuthWrapper'); // Change as needed
     });
   }
 

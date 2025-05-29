@@ -1,7 +1,7 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:homespice/screens/auth_service.dart';
 import 'package:homespice/screens/otp_verify.dart';
 
 class SignupPage extends StatefulWidget {
@@ -20,9 +20,135 @@ class _SignupPageState extends State<SignupPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  bool _isLoading = false;
+
+  // Email Validation
+  bool _isValidEmail(String email) {
+    final emailRegExp =
+        RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    return emailRegExp.hasMatch(email);
+  }
+
+  // Password Validation
+  bool _isValidPassword(String password) {
+    return password.length >= 8;
+  }
+
+  void _showError(String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: const Color.fromARGB(255, 168, 13, 2),
+      duration: const Duration(seconds: 2),
+    ),
+  );
+}
+
+final strongPasswordRegex = RegExp(
+  r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+);
+
+
+  void _handleSignup() async {
+    if (_isLoading) return; 
+    final username = usernameController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+
+
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      _showError("Please fill all fields");
+      return;
+    }
+
+    if (strongPasswordRegex.hasMatch(password)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('✅ Password is strong'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          '❌ Password must be at least 8 characters, include upper, lower, digit & special character.',
+        ),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+
+    if(username.contains(' ')) {
+      _showError("Username cannot contain spaces");
+      return;
+    }
+    if (password != confirmPasswordController.text.trim()) {
+      _showError("Passwords do not match");
+      return;
+    }
+    if (username.length < 8) {
+      _showError("Username must be at least 8 characters");
+      return;
+    }
+
+
+    if (!_isValidEmail(email)) {
+      _showError("Please enter a valid email address");
+      return;
+    }
+
+    if (!_isValidPassword(password)) {
+      _showError("password must be at least 8 characters");
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final isAvailable =
+        await AuthService.checkUsernameAndEmailAvailable(username, email);
+
+    if (!isAvailable) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showError("Username or Email already in use");
+      return;
+    }
+
+    try {
+      final otpSent = await AuthService.sendOtpToEmail(email);
+      setState(() => _isLoading = false);
+
+      if (otpSent) {
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => OtpVerificationScreen(
+              username: username,
+              email: email,
+              password: password,
+              isLogin: false,
+            ),
+          ),
+        );
+      } else {
+        if (!mounted) return;
+        _showError("Failed to send OTP. Please try again.");
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showError("Error: ${error.toString()}");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Theme(
+      data: ThemeData.light(), 
+    child:Scaffold(
       body: SingleChildScrollView(
         child: Container(
           height: MediaQuery.of(context).size.height,
@@ -43,11 +169,11 @@ class _SignupPageState extends State<SignupPage> {
                   child: Container(color: Colors.transparent),
                 ),
               ),
-              const SizedBox(height: 60),
+              const SizedBox(height: 45),
               Center(
                 child: Image.asset('assets/images/HomeSpice1.png', height: 220),
               ),
-              const SizedBox(height: 5),
+              //const SizedBox(height: 5),
               Card(
                 elevation: 10,
                 shape: RoundedRectangleBorder(
@@ -62,10 +188,11 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    //crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Username
                       SizedBox(
-                        width: 320,
+                        width: MediaQuery.of(context).size.width * 0.8,
                         child: TextField(
                           controller: usernameController,
                           decoration: const InputDecoration(
@@ -77,7 +204,7 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
 
                       // Email
                       SizedBox(
@@ -93,7 +220,7 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
 
                       // Password
                       SizedBox(
@@ -122,7 +249,7 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
 
                       // Confirm Password
                       SizedBox(
@@ -152,45 +279,12 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 18),
 
                       // Sign Up Button
                       ElevatedButton(
-                        onPressed: () {
-                          if (usernameController.text.isEmpty ||
-                              emailController.text.isEmpty ||
-                              passwordController.text.isEmpty ||
-                              confirmPasswordController.text.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                backgroundColor: Color.fromARGB(255, 168, 13, 2),
-                                content: Text("Please fill all fields"),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                            return;
-                          }
-                          if (passwordController.text !=
-                              confirmPasswordController.text) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Passwords do not match"),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                            return;
-                          }
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => const OtpVerificationScreen(
-                                    from: 'signup',
-                                    emailOrPhone: 'email',
-                                  ),
-                            ),
-                          );
-                        },
+                        onPressed: _isLoading ? null : _handleSignup,
+                        
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepPurple,
                           foregroundColor: Colors.white,
@@ -213,7 +307,7 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 10),
 
                       // Already have an account
                       TextButton(
@@ -269,6 +363,7 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

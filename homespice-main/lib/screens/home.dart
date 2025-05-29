@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:homespice/screens/drawer.dart';
+//import 'package:homespice/screens/drawer.dart';
 import 'package:homespice/screens/recipes.dart';
 import 'package:homespice/screens/ai_bot.dart';
 import 'package:homespice/screens/favourites.dart';
 import 'package:homespice/screens/profile.dart';
+ // <-- make sure this import points to your NotePage
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -27,7 +28,7 @@ class _HomeState extends State<Home> {
   }
 
   final List<Map<String, dynamic>> _appBarItems = [
-    {'title': 'Home Spice', 'icon': Icons.home},
+    {'title': 'HomeSpice', 'icon': Icons.home},
     {'title': 'Recipes', 'icon': Icons.restaurant_sharp},
     {'title': '  AI Recipes', 'icon': FontAwesomeIcons.robot},
     {'title': 'Favourites', 'icon': Icons.favorite_border_rounded},
@@ -53,16 +54,9 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const SideMenu(),
+      //drawer: const SideMenu(),
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        leading: Builder(
-          builder:
-              (context) => IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
-        ),
         title: Row(
           children: [
             Icon(_appBarItems[_selectedIndex]['icon'], color: Colors.white),
@@ -90,6 +84,30 @@ class _HomeState extends State<Home> {
         items: _navBarItems,
         onTap: _onItemTapped,
       ),
+      
+      // ✅ ADDING THE FLOATING ACTION BUTTON HERE
+      floatingActionButton:Padding(
+        padding: const EdgeInsets.only(bottom: 10.0), 
+      child:FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.pushNamed(context, 
+          '/Notes'); // Navigate to the Notes page
+        },
+        backgroundColor: Colors.deepPurple,
+        tooltip: 'Add Note',
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        elevation: 5,
+        heroTag: 'addNoteButton',
+        
+        label: Text(
+          'Save Recipe',
+          style: GoogleFonts.aBeeZee(color: Colors.white,fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        icon: const Icon(Icons.save_alt, color: Colors.white),
+      ),
+      ),
     );
   }
 }
@@ -114,20 +132,17 @@ class _HomePageContent extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 75),
+          const SizedBox(height: 60),
           ClipRRect(
-            borderRadius: BorderRadius.circular(
-              35.0, // Adjust the radius value as needed
-            ), // You can adjust the radius value
+            borderRadius: BorderRadius.circular(35.0),
             child: Image.asset(
               'assets/images/home3.png',
               height: 220,
               width: 210,
-              fit: BoxFit.fitWidth, // Optional: adjusts how the image is fit
+              fit: BoxFit.fitWidth,
             ),
           ),
-
-          const SizedBox(height: 50),
+          const SizedBox(height: 30),
           ElevatedButton(
             onPressed: onExploreTap,
             style: ElevatedButton.styleFrom(

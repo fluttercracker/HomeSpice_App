@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ForgotPassword extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -75,28 +76,59 @@ class ForgotPassword extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Handle OTP send here
-                      final email = emailController.text;
-                      // Show snackbar for 3 seconds
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Reset password link sent to your email successfully\n Check your inbox/spam folder",
+                    onPressed: () async {
+                      final email = emailController.text.trim();
+
+                      if (email.isEmpty || !email.contains('@')) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Please enter a valid email address"),
+                            backgroundColor: Colors.red,
+                            duration: Duration(seconds: 3),
+                            behavior: SnackBarBehavior.floating,
                           ),
-                          duration: Duration(seconds: 3),
-                          behavior: SnackBarBehavior.floating,
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                      //Send Email Link to resent on Email                //logic here to resent link send
-                      // ignore: avoid_print
-                      print("Send OTP to $email");
+                        );
+                        return;
+                      }
+
+                      try {
+                        await FirebaseAuth.instance.sendPasswordResetEmail(
+                          email: email,
+                        );
+                        // ignore: use_build_context_synchronously
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "Reset password link sent to your email successfully\nCheck your inbox/spam folder",
+                            ),
+                            backgroundColor: Colors.green,
+                            duration: Duration(seconds: 3),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      } on FirebaseAuthException catch (e) {
+                        String errorMessage;
+                        if (e.code == 'user-not-found') {
+                          errorMessage = 'No user found for that email.';
+                        } else {
+                          errorMessage =
+                              'Failed to send reset link. Please try again.';
+                        }
+
+                        // ignore: use_build_context_synchronously
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(errorMessage),
+                            backgroundColor: Colors.red,
+                            duration: const Duration(seconds: 3),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
